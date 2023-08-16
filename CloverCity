@@ -1,0 +1,131 @@
+_G.TixAutofarm = true -- breaks if anticheat i believe
+_G.AutoClickTix = true -- auto collects tix
+local NoClip = true -- noclip
+_G.CleanerTween = true -- doesn't glitch as much, but breaks your movement
+_G.DoSafeDoor = false --  does the safe door, but safe door has alot of hp
+_G.AutoEquipPunch = true -- for auto punch
+_G.AutoPunch = true -- punches for you, its an autoclicker
+
+local distanceforanticheatplace = 40 -- probably a fix
+local AutoPunchSpeed = 0.22 -- speed between clicks
+-- offsets
+local TweenOffsetZ = 0
+local TweenOffsetY = -1.5
+local TweenOffsetX = 0
+local tweenspeed = 33 -- speed of the tween
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
+local LocalPlayer = Players.LocalPlayer
+
+local function TweenTo(cf, dur)
+    local Character = LocalPlayer.Character
+    if not Character or not Character:FindFirstChild("HumanoidRootPart") then
+        return
+    end
+
+    local rootPart = Character:WaitForChild("HumanoidRootPart")
+    local direction = (cf.p - rootPart.Position).unit
+    local targetCFrame = CFrame.new(cf.p + Vector3.new(TweenOffsetX, TweenOffsetY, TweenOffsetZ))
+    local distance = (targetCFrame.p - rootPart.CFrame.p).Magnitude
+    local tweenInfo = TweenInfo.new(distance / tweenspeed, Enum.EasingStyle.Linear)
+    local tween = TweenService:Create(rootPart, tweenInfo, {
+        CFrame = targetCFrame
+    })
+
+    tween:Play()
+
+    return tween
+end
+            local function NoclipLoop()
+                if NoClip == true and Players.LocalPlayer.Character ~= nil then
+                    for _, child in pairs(Players.LocalPlayer.Character:GetDescendants()) do
+                        if child:IsA("BasePart") and child.CanCollide == true and child.Name ~= floatName then
+                            child.CanCollide = false
+                        end
+                    end
+                end
+            end
+            local Noclipping = game:GetService("RunService").Stepped:Connect(NoclipLoop)
+            LocalPlayer.CharacterAdded:Connect(function()
+                repeat
+                    wait()
+                until game.Players.LocalPlayer.Character and
+                    game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") -- function happens after character spawns / gets added
+                wait(1)
+                if NoClip == true then
+                    NoclipLoop()
+                end
+            end)
+
+for i, v in pairs(Workspace:GetDescendants()) do
+    if v:IsA("Seat") then
+        v:Destroy()
+    end
+end
+task.spawn(function()
+while task.wait(0.1) do
+if _G.CleanerTween and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and not LocalPlayer.Character.HumanoidRootPart:FindFirstChild("PlayerHubTween") then
+    local BV = Instance.new('BodyVelocity', Workspace)
+    BV.Parent = LocalPlayer.Character.HumanoidRootPart
+    BV.velocity = Vector3.new(0, 0, 0)
+    BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+    BV.Name = "PlayerHubTween"
+end
+end
+end)
+task.spawn(function()
+    while _G.AutoClickTix and task.wait() do
+        for _, v in pairs(workspace.UnanchoredProps:GetChildren()) do
+            if v.Name == "Ticket" and v:FindFirstChild("ClickDetector") then
+                fireclickdetector(v.ClickDetector)
+            end
+        end
+    end
+end)
+task.spawn(function()
+    while _G.AutoEquipPunch and task.wait() do
+         for _, tool in ipairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
+                if tool:IsA("Tool") and tool.Name == "Fist" and game.Players.LocalPlayer.Character then
+                    tool.Parent = game:GetService("Players").LocalPlayer.Character
+                end
+            end
+    end
+end)
+task.spawn(function()
+    while _G.AutoPunch and task.wait(AutoPunchSpeed) do
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, true, game, 1)
+                    game:GetService("VirtualInputManager"):SendMouseButtonEvent(0, 0, 0, false, game, 1)
+    end
+end)
+task.spawn(function()
+    while  _G.TixAutofarm  and task.wait() do
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            local moneyMachines = workspace.MoneyMachines:GetChildren()
+
+            local closestMachine
+            local closestDistance = math.huge
+
+            for _, machine in pairs(moneyMachines) do
+                if _G.DoSafeDoor == false and machine.Name ~= "Small Bank Safe" and machine.Name ~= "Safe Door" and machine:IsA("Model") and machine:FindFirstChild("Main") and machine:FindFirstChild("BHealth", true) and machine:FindFirstChild("BHealth", true).Value ~= 0 then
+                    local distance = (machine.Main.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                    if distance < closestDistance and  (machine.Main.Position - Workspace.Paper.Position).Magnitude > tonumber(distanceforanticheatplace) then
+                        closestMachine = machine
+                        closestDistance = distance
+                    end
+         
+                elseif _G.DoSafeDoor == true and machine.Name ~= "Small Bank Safe"  and machine:IsA("Model") and machine:FindFirstChild("Main") and machine:FindFirstChild("BHealth", true) and machine:FindFirstChild("BHealth", true).Value ~= 0 then
+                    local distance = (machine.Main.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                    if distance < closestDistance then
+                        closestMachine = machine
+                        closestDistance = distance
+                    end
+                end
+            end
+
+            if closestMachine then
+                TweenTo(closestMachine.Main.CFrame)
+            end
+        end
+    end
+end)
